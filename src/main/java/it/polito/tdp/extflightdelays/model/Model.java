@@ -22,29 +22,27 @@ public class Model {
 	public Model() {
 		dao = new ExtFlightDelaysDAO();
 		idMap = new HashMap<Integer,Airport>();
-		dao.loadAllAirports(idMap);
+		dao.loadAllAirports(idMap);//carico la mappa
 	}
 	
 	public void creaGrafo(int x) {
 		grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
-		//aggiungere i vertici
+		
+		//aggiungo i vertici
 		Graphs.addAllVertices(this.grafo, dao.getVertici(x, idMap));
 		
-		//aggiungere gli archi
-		for (Rotta r : dao.getRotte(idMap)) {
-			if(this.grafo.containsVertex(r.getA1()) 
-					&& this.grafo.containsVertex(r.getA2())) {
-				DefaultWeightedEdge edge = this.grafo.getEdge(r.getA1(),r.getA2());
-				if(edge == null) {
-					Graphs.addEdgeWithVertices(this.grafo, r.getA1(), r.getA2(), r.getnVoli());
-				} else {
-					double pesoVecchio = this.grafo.getEdgeWeight(edge);
-					double pesoNuovo = pesoVecchio + r.getnVoli();
-					this.grafo.setEdgeWeight(edge, pesoNuovo);
-				}
+		//aggiungo gli archi: recupero dal database
+		//tutte le rotte in entrambi i versi
+		for(Rotta r : dao.getRotte(idMap)) {
+			DefaultWeightedEdge edge = this.grafo.getEdge(r.getA1(), r.getA2());
+			if(edge==null) {
+				Graphs.addEdgeWithVertices(this.grafo, r.getA1(), r.getA2(), r.getnVoli());
+			}else {
+				double pesoVecchio = this.grafo.getEdgeWeight(edge);
+				double pesoNuovo = pesoVecchio + r.getnVoli();
+				this.grafo.setEdgeWeight(edge, pesoNuovo);
 			}
 		}
-		
 	}
 	
 	public int nVertici() {
@@ -62,33 +60,31 @@ public class Model {
 	}
 	
 	public List<Airport> getPercorso (Airport a1, Airport a2){
-		 List<Airport> percorso = new ArrayList<>();
-		 	BreadthFirstIterator<Airport,DefaultWeightedEdge> it =
-				 new BreadthFirstIterator<>(this.grafo,a1);
-		 
-		 Boolean trovato = false;
-		 //visito il grafo
-		 while(it.hasNext()) {
-			 Airport visitato = it.next();
-			 if(visitato.equals(a2))
-				 trovato = true;
-		 }
-		 
-		 
-		 //ottengo il percorso
-		 if(trovato) {
-			 percorso.add(a2);
-			 Airport step = it.getParent(a2);
-			 while (!step.equals(a1)) {
-				 percorso.add(0,step);
-				 step = it.getParent(step);
-			 }
-			 
-			 percorso.add(0,a1);
-			 return percorso;
-		 } else {
-			 return null;
-		 }
+		List<Airport> percorso = new ArrayList<>();
+		BreadthFirstIterator<Airport, DefaultWeightedEdge> it = 
+				new BreadthFirstIterator<>(this.grafo, a1);
+		
+		Boolean trovato = false;
+		//visito il grafo
+		while(it.hasNext()) {
+			Airport visitato = it.next();
+			if(visitato.equals(a2))
+				trovato = true;
+		}
+		
+		//ottengo il percorso
+		if(trovato) {
+		percorso.add(a2);
+		Airport step = it.getParent(a2);
+		while(!step.equals(a1)) {
+			percorso.add(0, step);
+			step = it.getParent(step);
+		}
+		
+		percorso.add(0,a1);
+			return percorso;
+		}else
+			return null;
 	}
 }
 

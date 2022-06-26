@@ -62,7 +62,7 @@ public class FXMLController {
     	cmbBoxAeroportoPartenza.getItems().addAll(this.model.getVertici());
     	cmbBoxAeroportoDestinazione.getItems().addAll(this.model.getVertici());
     }
-
+ 
     @FXML
     void doTestConnessione(ActionEvent event) {
     	txtResult.clear();
